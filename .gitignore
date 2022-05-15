@@ -1,0 +1,15 @@
+# ignore .env files
+*.env
+
+# ignore virtual environment folder
+*venv
+env 
+
+# ignore config files
+
+twitter.cfg
+
+target/
+project/
+.metals/
+.vscode/
