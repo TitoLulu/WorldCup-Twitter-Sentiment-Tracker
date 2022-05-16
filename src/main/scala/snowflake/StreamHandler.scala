@@ -5,6 +5,7 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame,SaveMode,SparkSession}
+import java.util.UUID
 
 object StreamHandler {
     def main(args: Array[String]): Unit = {
