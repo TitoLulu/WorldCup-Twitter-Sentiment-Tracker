@@ -5,6 +5,9 @@ import time
 
 from kafka import KafkaConsumer, KafkaProducer
 from datetime import datetime
+from kafka.admin import KafkaAdminClient,NewTopic
+
+
 
 config = configparser.ConfigParser()
 config.read('twitter.cfg')
@@ -17,8 +20,10 @@ consumer_key, consumer_secret, access_token, access_token_secret
 )
 
 api = tweepy.API(auth)
-producer = KafkaProducer(bootstrap_servers='localhost:9092', api_version='0.11.5')
-topic_name = 'worldcup2022'
+producer = KafkaProducer(bootstrap_servers='localhost:9092')
+topic_name = 'worldcup'
+
+
 
 
 def normalize_timestamp(time):
@@ -43,7 +48,9 @@ def get_twitter_data():
         record += ";"
         record += str(i.retweet_count)
         record += ";"
-        producer.send(topic_name,str.encode(record))
+        producer.flush()
+        producer.send('worldcup',str.encode(record))
+        producer.flush()
 
   
         
@@ -54,6 +61,7 @@ def schedule_work(interval: int):
     while True:
         get_twitter_data()
         print(f"Sending data to Kafka, #{counter}")
+        # [print(msg) for msg in consumer]
         counter += 1 
         time.sleep(interval)
 

@@ -1,11 +1,14 @@
 package snowflake
 
+// import net.snowflake.spark.snowflake.SnowflakeConnectorUtils
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame,SaveMode,SparkSession}
 import java.util.UUID
+
+case class TwitterData(user_id: Long, created_at: String, num_followers: Long, location: String, num_favourites: Long,num_retweets: Long)
 
 object StreamHandler {
     def main(args: Array[String]): Unit = {
@@ -18,18 +21,19 @@ object StreamHandler {
 
         import spark.implicits._
 
-        // subscribe to the topic  worldcup 2022
+        // subscribe to the topic  worldcup 
         val inputStreamDF = spark
             .readStream
 			.format("kafka") // org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.5
 			.option("kafka.bootstrap.servers", "localhost:9092")
-            .option("subscribe", "worldcup2022")
+            .option("subscribe", "worldcup")
             .option("startingOffsets", "earliest")
             .load()
+                
+        inputStreamDF.selectExpr("CAST(value AS STRING)").as[String]
+        println("We are here !!!", "=>",inputStreamDF.printSchema())
 
-        inputStreamDF.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)").as[(String, String)]
 
-        // establish connection to sink db (snowflake)
         var sfOptions = Map(
             "sfURL" -> "https://gjnedoz-dmb37080.snowflakecomputing.com",
             "sfAccount" -> "dmb37080",
@@ -40,14 +44,23 @@ object StreamHandler {
             "sfRole" -> "ACCOUNTADMIN"
         )
 
+        // val SNOWFLAKE_SOURCE_NAME = "net.snowflake.spark.snowflake"
+
         // write data to table
-        inputStreamDF.write
-            .format("snowflake")
-            .options(sfOptions) 
-            .option("dbtable", "TWITTER")
-            .mode(SaveMode.Overwrite)
-            .save()
-    
+        val query = inputStreamDF.writeStream
+            .trigger(Trigger.ProcessingTime("30 seconds"))
+            .foreachBatch{(batchDF:DataFrame, batchID: Long) => 
+            batchDF.write
+                .format("console")
+                .options(sfOptions) 
+                .option("dbtable", "TWITTER")
+                .mode(SaveMode.Append)
+                .save()
+            }
+            .outputMode("update")
+            .start()
+        
+        query.awaitTermination()
 
     }
 
