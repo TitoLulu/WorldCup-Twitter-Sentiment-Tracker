@@ -6,7 +6,7 @@ The project builds on to my learnings on building Structured STreaming pipelines
 
 # How to get started with the project 
 
-1. Install SBT as per the guidelines provide [here](https://www.scala-sbt.org/1.x/docs/Setup.html)
+1. Install SBT as per the guidelines provided [here](https://www.scala-sbt.org/1.x/docs/Setup.html)
 2. Clone this repo into your workspace 
 3. Add your Twitter Developer account credentials to the file twitter.cfg 
 4. Add your SnowFlake User credentials to the StreamHandler.scala file 
